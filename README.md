@@ -64,6 +64,8 @@ npm run tauri build   # 打包
 
 ## 开源协议
 
+Copyright (C) 2026 not-exist <not.exist.2011@gmail.com>
+
 代码使用 **GNU General Public License v3.0**，见 [`LICENSE`](LICENSE)。
 
 内置字体 Plus Jakarta Sans 使用 **SIL Open Font License 1.1**，与本项目代码分开授权，协议全文见 [`static/fonts/OFL.txt`](static/fonts/OFL.txt)。
