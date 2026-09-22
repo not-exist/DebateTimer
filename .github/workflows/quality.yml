@@ -1,0 +1,49 @@
+name: quality
+
+# Linux 单机快速道：格式检查 + 类型检查 + 单元测试（前端与 Rust）。
+# 不含 tauri build，所以不需要 webkit2gtk 等系统依赖，几十秒量级出结论。
+# 平台相关的编译检查与 e2e 在 platform.yml。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: 格式 · 类型 · 单测
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装前端依赖
+        run: npm ci
+
+      # 必须显式指定 toolchain 与 components：该 action 装的是 --profile minimal，
+      # 不含 rustfmt / clippy；而 rust-toolchain.toml 的隐式 auto-install 已被 rustup 标记 deprecated。
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.0
+          components: rustfmt, clippy
+
+      # workspaces 必须显式写：仓库根不是 Cargo workspace 根，默认值 . -> target 会缓存不到。
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      # verify = format:check → fmt:rust → test → check → build → lint:rust → test:rust
+      # 已按"快失败优先"排序，第一个失败即中断，日志里能直接看出是哪道门禁。
+      - name: 跑全部门禁
+        run: npm run verify
