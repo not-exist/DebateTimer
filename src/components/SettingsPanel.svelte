@@ -5,7 +5,7 @@
   import { exportTemplate, importTemplate } from "../core/storage";
   import { playPrompt, unlockAudio } from "../core/audio";
 
-  let { open = $bindable(false) } = $props();
+  let { open = $bindable(false), onQuit }: { open?: boolean; onQuit?: () => void } = $props();
 
   let json = $state("");
   let error = $state<string | null>(null);
@@ -89,7 +89,12 @@
     >
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-lg font-semibold">赛制</h2>
-        <button class={btn} onclick={() => (open = false)}>关闭</button>
+        <div class="flex items-center gap-2">
+          {#if onQuit}
+            <button class="{btn} text-ink-muted" onclick={onQuit}>退出应用</button>
+          {/if}
+          <button class={btn} onclick={() => (open = false)}>关闭</button>
+        </div>
       </div>
 
       <!-- 模板选择 -->

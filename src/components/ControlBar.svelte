@@ -6,8 +6,9 @@
     visible: boolean;
     onHelp: () => void;
     onSettings: () => void;
+    onQuit: () => void;
   }
-  let { visible, onHelp, onSettings }: Props = $props();
+  let { visible, onHelp, onSettings, onQuit }: Props = $props();
 
   const btn =
     "rounded-md border border-line px-4 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:border-accent hover:text-accent active:bg-surface";
@@ -28,4 +29,5 @@
   <button class={btn} onclick={() => timer.switchSide()}>切换发言方</button>
   <button class={btn} onclick={onSettings}>赛制</button>
   <button class={btn} onclick={onHelp}>快捷键</button>
+  <button class="{btn} text-ink-muted" onclick={onQuit}>退出</button>
 </div>

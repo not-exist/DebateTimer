@@ -13,10 +13,12 @@
   import PromptOverlay from "../components/PromptOverlay.svelte";
   import HelpOverlay from "../components/HelpOverlay.svelte";
   import SettingsPanel from "../components/SettingsPanel.svelte";
+  import QuitConfirm from "../components/QuitConfirm.svelte";
 
   let editing = $state<"topic" | "pro" | "con" | null>(null);
   let helpOpen = $state(false);
   let settingsOpen = $state(false);
+  let quitOpen = $state(false);
   let controlsVisible = $state(true);
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -32,6 +34,17 @@
     try {
       const w = getCurrentWindow();
       await w.setFullscreen(!(await w.isFullscreen()));
+    } catch {
+      // 纯浏览器开发模式下没有 Tauri 窗口，忽略
+    }
+  }
+
+  async function quit() {
+    quitOpen = false;
+    timer.stopLoop();
+    config.save();
+    try {
+      await getCurrentWindow().close();
     } catch {
       // 纯浏览器开发模式下没有 Tauri 窗口，忽略
     }
@@ -77,7 +90,8 @@
         helpOpen = !helpOpen;
         break;
       case "close":
-        if (helpOpen) helpOpen = false;
+        if (quitOpen) quitOpen = false;
+        else if (helpOpen) helpOpen = false;
         else if (settingsOpen) settingsOpen = false;
         else editing = null;
         break;
@@ -108,8 +122,10 @@
     visible={controlsVisible}
     onHelp={() => (helpOpen = true)}
     onSettings={() => (settingsOpen = true)}
+    onQuit={() => (quitOpen = true)}
   />
 </main>
 
 <HelpOverlay open={helpOpen} onClose={() => (helpOpen = false)} />
-<SettingsPanel bind:open={settingsOpen} />
+<SettingsPanel bind:open={settingsOpen} onQuit={() => (quitOpen = true)} />
+<QuitConfirm open={quitOpen} onCancel={() => (quitOpen = false)} onConfirm={quit} />
