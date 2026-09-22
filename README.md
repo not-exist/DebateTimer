@@ -58,3 +58,19 @@ npm run tauri build
 ```
 
 通常在哪个系统上构建就产出哪个系统的安装包（交叉编译需要额外配置 CI）。Windows 目标机器需 WebView2（Win10 1803+ 系统自带，否则需随包安装运行时）。字体已本地打包，教室无网络也能正常显示。
+
+## 项目结构
+
+```
+src/core/         纯 TypeScript 领域层：计时引擎、赛制、提示音、快捷键、存储（零框架依赖，Vitest 覆盖）
+src/lib/          Svelte 5 runes 状态桥接，把 core 包成响应式
+src/components/   视图组件
+src-tauri/        桌面壳配置与 Rust 入口
+docs/plans/       三套候选方案对比与实施计划
+```
+
+## 开源协议
+
+代码使用 **MIT**，见 [`LICENSE`](LICENSE)。
+
+内置字体 Plus Jakarta Sans 使用 **SIL Open Font License 1.1**，协议全文见 [`static/fonts/OFL.txt`](static/fonts/OFL.txt)。
