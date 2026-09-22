@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* 字体本地打包：教室可能没有网络，绝不能引 Google Fonts CDN */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/plus-jakarta-sans-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@theme {
+  /* V1 瑞士白：纯白底 + 深墨字 + 极细分割线，几乎不用阴影 */
+  --color-canvas: #ffffff;
+  --color-ink: #0f172a;
+  --color-ink-muted: #475569;
+  --color-line: #e5e7eb;
+  --color-surface: #f8fafc;
+
+  --color-accent: #2563eb; /* 运行中 */
+  --color-pro: #2563eb; /* 正方：蓝 */
+  --color-con: #d97706; /* 反方：琥珀（蓝/橙是最安全的色盲友好对比对） */
+  --color-warn: #d97706; /* 剩 30 秒 */
+  --color-danger: #dc2626; /* 时间到 */
+
+  --font-sans: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC",
+    system-ui, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* 计时数字必须等宽，否则每秒跳动会左右晃 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+input,
+button {
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
