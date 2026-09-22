@@ -1,0 +1,11 @@
+node_modules
+build
+.svelte-kit
+package-lock.json
+src-tauri/target
+src-tauri/gen
+src-tauri/Cargo.lock
+
+# 许可证文本必须逐字保留（见 commit 5923f0d：GPL-3.0 原文完整性用于 license 检测）
+LICENSE
+static/fonts/OFL.txt
