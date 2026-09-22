@@ -1,156 +1,115 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { timer } from "../lib/timer.svelte";
+  import { config } from "../lib/config.svelte";
+  import { resolveHotkey } from "../core/hotkeys";
+  import { unlockAudio } from "../core/audio";
+  import TimerDisplay from "../components/TimerDisplay.svelte";
+  import TopicHeader from "../components/TopicHeader.svelte";
+  import StageBar from "../components/StageBar.svelte";
+  import FreeDebatePanel from "../components/FreeDebatePanel.svelte";
+  import ControlBar from "../components/ControlBar.svelte";
+  import PromptOverlay from "../components/PromptOverlay.svelte";
+  import HelpOverlay from "../components/HelpOverlay.svelte";
+  import SettingsPanel from "../components/SettingsPanel.svelte";
 
-  let name = $state("");
-  let greetMsg = $state("");
+  let editing = $state<"topic" | "pro" | "con" | null>(null);
+  let helpOpen = $state(false);
+  let settingsOpen = $state(false);
+  let controlsVisible = $state(true);
+  let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+  function wake() {
+    // 浏览器会挂起 AudioContext 直到首次用户交互——不解锁的话现场第一声铃是静音的
+    unlockAudio();
+    controlsVisible = true;
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => (controlsVisible = false), 3000);
   }
+
+  async function toggleFullscreen() {
+    try {
+      const w = getCurrentWindow();
+      await w.setFullscreen(!(await w.isFullscreen()));
+    } catch {
+      // 纯浏览器开发模式下没有 Tauri 窗口，忽略
+    }
+  }
+
+  function onKeydown(e: KeyboardEvent) {
+    wake();
+    const action = resolveHotkey(e);
+    if (!action) return;
+
+    switch (action.type) {
+      case "toggle":
+        e.preventDefault();
+        timer.toggle();
+        break;
+      case "nextStage":
+        timer.next();
+        break;
+      case "prevStage":
+        timer.prev();
+        break;
+      case "reset":
+        timer.reset();
+        break;
+      case "switchSide":
+        e.preventDefault();
+        timer.switchSide();
+        break;
+      case "adjust":
+        timer.adjust(action.deltaMs);
+        break;
+      case "gotoStage":
+        timer.goto(action.index);
+        break;
+      case "editTopic":
+        editing = "topic";
+        break;
+      case "fullscreen":
+        e.preventDefault();
+        void toggleFullscreen();
+        break;
+      case "help":
+        helpOpen = !helpOpen;
+        break;
+      case "close":
+        if (helpOpen) helpOpen = false;
+        else if (settingsOpen) settingsOpen = false;
+        else editing = null;
+        break;
+    }
+  }
+
+  onMount(() => {
+    timer.loadStage(config.match.stageIndex ?? 0);
+    timer.startLoop();
+    wake();
+    return () => timer.stopLoop();
+  });
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<svelte:window onkeydown={onKeydown} onpointerdown={wake} onmousemove={wake} />
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
+<main class="flex h-full w-full flex-col">
+  <TopicHeader {editing} onEdit={(t) => (editing = t)} />
 
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
+  <section class="flex flex-1 flex-col items-center justify-center gap-6">
+    <PromptOverlay />
+    <TimerDisplay />
+    <StageBar />
+    <FreeDebatePanel />
+  </section>
+
+  <ControlBar
+    visible={controlsVisible}
+    onHelp={() => (helpOpen = true)}
+    onSettings={() => (settingsOpen = true)}
+  />
 </main>
 
-<style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
-</style>
+<HelpOverlay open={helpOpen} onClose={() => (helpOpen = false)} />
+<SettingsPanel bind:open={settingsOpen} />
