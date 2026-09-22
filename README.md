@@ -71,6 +71,6 @@ docs/plans/       三套候选方案对比与实施计划
 
 ## 开源协议
 
-代码使用 **MIT**，见 [`LICENSE`](LICENSE)。
+代码使用 **GNU General Public License v3.0**，见 [`LICENSE`](LICENSE)。
 
-内置字体 Plus Jakarta Sans 使用 **SIL Open Font License 1.1**，协议全文见 [`static/fonts/OFL.txt`](static/fonts/OFL.txt)。
+内置字体 Plus Jakarta Sans 使用 **SIL Open Font License 1.1**，与本项目代码分开授权，协议全文见 [`static/fonts/OFL.txt`](static/fonts/OFL.txt)。
